@@ -200,12 +200,16 @@ def main():
     print(f"\n{bcolors.WARNING}./ Starting the proccess ...{bcolors.ENDC}\n")
     with alive_bar(Nb) as bar:
         for line in ListContent:
-            response = SmtpCheck(line)
-            if(response == True):
-                valid += 1
-            else:
-                invalid += 1
-            bar()
+            try:
+                response = SmtpCheck(line)
+                if(response == True):
+                    valid += 1
+                else:
+                    invalid += 1
+                bar()
+
+            except Exception as e:
+                pass
 
     print(f"""\n
 {bcolors.OKGREEN}Proccess Completed !\n
