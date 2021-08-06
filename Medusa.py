@@ -36,10 +36,10 @@ class bcolors:
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
 
-#clean my screen
+# clean my screen
 
 def clear():
-  
+
     # for windows
     if name == "nt":
         _ = system("cls")
@@ -107,7 +107,7 @@ def Argv():
     print(f"{bcolors.BOLD}")
     while True:
         try:
-            ListFile = str(input(f'\n{bcolors.OKCYAN}> List File : '))
+            ListFile = str(input(f"\n{bcolors.OKCYAN}> List File : "))
         except ValueError:
             print(f"{bcolors.FAIL}ERROR : Sorry, I didn't understand that.")
             continue
@@ -156,40 +156,50 @@ def SmtpCheck(Params):
     sender_email = smtp_info[2]
     password = smtp_info[3]
     receiver_email = ReciverEmail
-    message = MIMEText(''+smtp_server+'|'+port+'|'+sender_email+'|'+password+'', 'plain', 'utf-8')
+    message = MIMEText(str(f'{smtp_server}|{port}|{sender_email}|{password}'), 'plain', 'utf-8')
     message['From'] = str(Header(f"Medusa <{sender_email}>", 'utf-8'))
     x = random.randint(100000000)
-    subject = 'New working smtp #'+str(x)+''
+    subject = str(f'New working smtp #{x}')
     message['Subject'] = Header(subject, 'utf-8')
-
-    server = smtplib.SMTP(smtp_server,port)
-
     try:
         context = ssl.create_default_context()
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
         if(port == '587'):
-            server = smtplib.SMTP(smtp_server,port)
+            server = smtplib.SMTP(smtp_server,port, timeout=float(Timeout))
             server.ehlo() 
             server.starttls(context=context) 
             server.ehlo() 
         elif(port == '465'):
-            server = smtplib.SMTP_SSL(smtp_server,port, timeout=Timeout)
+            server = smtplib.SMTP_SSL(smtp_server,port, timeout=float(Timeout))
             server.ehlo() 
         else:
-            server = smtplib.SMTP(smtp_server,port)
-            server.ehlo() 
-        server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, message.as_string())
-        server.quit()
-        file_object = open(OutputFile, 'a')
-        file_object.write(Params+"\n")
-        file_object.close()
-        return True
+            server = smtplib.SMTP(smtp_server,port, timeout=float(Timeout))
+            server.ehlo()
+        connected = True
     except Exception as e:
+        connected = False
         return False
         pass
 
+    if connected:
+        try:
+            server.login(sender_email, password)
+            loggedin = True
+        except Exception as e:
+            loggedin = False
+            pass
+    if loggedin:
+        try:
+            server.sendmail(sender_email, receiver_email, message.as_string())
+            file_object = open(OutputFile, 'a')
+            file_object.write(Params+"\n")
+            file_object.close()
+            return True
+        except Exception as e:
+            return False
+            pass
+    server.quit()
 # Main func
 
 def main():
